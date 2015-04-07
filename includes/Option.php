@@ -5,13 +5,13 @@
  * Option.
  *
  * @package SPTP
- * @version 0.1.0
+ * @since   0.1.0
+ * @version 1.0.2
  */
 
 namespace SPTP;
 
 class Option {
-
 
 
 	public function add_hooks() {
@@ -40,6 +40,7 @@ class Option {
 	 */
 	public function is_defined_structure( $post_type ) {
 		$post_type_object = get_post_type_object( $post_type );
+
 		return ! empty( $post_type_object->sptp_permalink_structure );
 	}
 
@@ -85,7 +86,7 @@ class Option {
 
 					$new_options[ $select_key ] = trim( $new_options[ $select_key ], '/' );
 
-					if ( $new_options[ $select_key ] != 'custom' ) {
+					if ( 'custom' != $new_options[ $select_key ] ) {
 						$new_options[ $key ] = $new_options[ $select_key ];
 					}
 
