@@ -6,7 +6,7 @@
  *
  * @package SPTP
  * @since   0.1.0
- * @version 1.0.2
+ *
  */
 
 namespace SPTP;
@@ -31,6 +31,26 @@ class Option {
 		}
 
 		return $this->get( "sptp_{$post_type}_structure" );
+	}
+
+	/**
+	 * @param string $post_type
+	 *
+	 * @return bool|string
+	 */
+	public function get_front_struct( $post_type ) {
+		$structure = $this->get_structure( $post_type );
+
+		return $this->extract_front_struct( $structure );
+	}
+
+	/**
+	 * @param string $structure
+	 *
+	 * @return string
+	 */
+	public function extract_front_struct( $structure ) {
+		return trim( mb_substr( $structure, 0, mb_strpos( $structure, '%' ) ), '/' );
 	}
 
 	/**

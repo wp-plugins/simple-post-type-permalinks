@@ -6,7 +6,7 @@
  *
  * @package SPTP
  * @since   0.1.0
- * @version 1.0.2
+ *
  */
 namespace SPTP;
 
@@ -76,6 +76,8 @@ class Bootstrap {
 	 */
 	private function load_modules() {
 
+		do_action( 'sptp_before_load_modules' );
+
 		$this->option    = apply_filters( 'sptp_module_option', new Option(), $this );
 		$this->admin     = apply_filters( 'sptp_module_admin', new Admin( $this->option ), $this );
 		$this->rewrite   = apply_filters( 'sptp_module_rewrite', new Rewrite( $this->option ), $this );
@@ -86,8 +88,9 @@ class Bootstrap {
 		$this->rewrite->add_hooks();
 		$this->permalink->add_hooks();
 
-		do_action( 'sptp_modules_loaded' );
+		do_action( 'sptp_after_load_modules' );
 
+		do_action( 'sptp_modules_loaded' );
 	}
 
 	/**

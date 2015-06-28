@@ -6,7 +6,7 @@
  *
  * @package SPTP
  * @since   0.1.0
- * @version 1.0.2
+ *
  */
 
 namespace SPTP;
@@ -39,6 +39,7 @@ class Rewrite {
 	 * @param object $args Arguments used to register the post type.
 	 */
 	public function registered_post_type( $post_type, $args ) {
+		global $wp_post_types;
 
 		if ( $args->_builtin or ! $args->publicly_queryable ) {
 			return;
@@ -48,6 +49,15 @@ class Rewrite {
 			'post_type' => $post_type,
 			'args'      => $args,
 		);
+
+		if ( $slug = $this->option->get_front_struct( $post_type ) ) {
+			if ( is_array( $wp_post_types[ $post_type ]->rewrite ) ) {
+				$original_slug = $wp_post_types[ $post_type ]->rewrite['slug'];
+				$wp_post_types[ $post_type ]->rewrite['slug'] = $slug;
+				$wp_post_types[ $post_type ]->rewrite['original_slug'] = $original_slug;
+			}
+		}
+
 	}
 
 	/**
@@ -58,24 +68,33 @@ class Rewrite {
 	public function register_rewrite_rules() {
 
 		if ( ! empty( $this->queue ) ) {
-			array_walk( $this->queue, array( $this, 'register_rewrite_rule' ) );
+			array_walk( $this->queue, array( $this, 'register_rewrite_rule_adapter' ) );
 		}
 	}
-
 
 	/**
 	 *
 	 * @param array $param
 	 *
 	 */
-	public function register_rewrite_rule( Array $param ) {
+	public function register_rewrite_rule_adapter( Array $param ) {
+		$args      = $param['args'];
+		$post_type = $param['post_type'];
+		$this->register_rewrite_rule( $post_type, $args );
+	}
+
+
+	/**
+	 * after a post type is registered.
+	 *
+	 * @param string $post_type Post type.
+	 * @param object $args Arguments used to register the post type.
+	 */
+	public function register_rewrite_rule( $post_type, $args ) {
 
 		if ( '' == get_option( 'permalink_structure' ) ) {
 			return;
 		}
-
-		$args      = $param['args'];
-		$post_type = $param['post_type'];
 
 		$permastruct_args         = $args->rewrite;
 		$permastruct_args['feed'] = $permastruct_args['feeds'];
@@ -92,6 +111,13 @@ class Rewrite {
 			$struct  = str_replace( $search, $replace, $struct );
 
 			add_permastruct( $post_type, $struct, $permastruct_args );
+
+			$slug = $this->option->get_front_struct( $post_type );
+
+			if ( $slug ) {
+				add_rewrite_rule( "$slug/page/?([0-9]{1,})/?$", "index.php?paged=\$matches[1]&post_type=$post_type", 'top' );
+				add_rewrite_rule( "$slug/?$", "index.php?post_type=$post_type", 'top' );
+			}
 		}
 	}
 
@@ -99,6 +125,7 @@ class Rewrite {
 	/**
 	 *
 	 * Reset Permastructs.
+	 * for deactivation.
 	 *
 	 */
 	public function reset_rewrite_rules() {

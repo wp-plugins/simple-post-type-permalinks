@@ -6,7 +6,6 @@
  *
  * @package SPTP
  * @since   0.1.0
- * @version 1.0.2
  *
  */
 
@@ -22,7 +21,19 @@ class Permalink {
 	}
 
 	public function add_hooks() {
-		add_filter( 'post_type_link', array( $this, 'post_type_link' ), 10, 2 );
+		$post_type_link_priority         = apply_filters( 'sptp_post_type_link_priority', 10 );
+		$post_type_archive_link_priority = apply_filters( 'sptp_post_type_archive_link_priority', 10 );
+
+		add_filter(
+			'post_type_link', array(
+			$this,
+			'post_type_link'
+		), $post_type_link_priority, 2 );
+
+		add_filter( 'post_type_archive_link', array(
+			$this,
+			'post_type_archive_link'
+		), $post_type_archive_link_priority, 2 );
 	}
 
 	/**
@@ -40,10 +51,34 @@ class Permalink {
 			return $post_link;
 		}
 
-		$rewritecode = array( "%{$post->post_type}_id%", );
+		$rewritecode    = array( "%{$post->post_type}_id%", );
 		$rewritereplace = array( $post->ID, );
+
 		return str_replace( $rewritecode, $rewritereplace, $post_link );
 
+	}
+
+	/**
+	 * Filter the post type archive permalink.
+	 *
+	 * @since 3.1.0
+	 *
+	 * @param string $link The post type archive permalink.
+	 * @param string $post_type Post type name.
+	 *
+	 * @return string
+	 */
+	public function post_type_archive_link( $link, $post_type ) {
+		$post_type_obj = get_post_type_object( $post_type );
+
+		if ( get_option( 'permalink_structure' ) && is_array( $post_type_obj->rewrite ) ) {
+
+			$struct = $this->option->get_front_struct( $post_type );
+
+			$link = home_url( user_trailingslashit( $struct, 'post_type_archive' ) );
+		}
+
+		return $link;
 	}
 
 }
